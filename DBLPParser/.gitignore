@@ -1,0 +1,5 @@
+# DBLPParser gitignore file
+
+/dataset
+# virtual environment of project
+/dblpparser
