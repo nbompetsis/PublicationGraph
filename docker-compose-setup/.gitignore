@@ -1,0 +1,5 @@
+# Docker compose gitignore file
+
+#neo4j
+/neo4j/data
+/neo4j/logs

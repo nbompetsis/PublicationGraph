@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  neo4j:
+    container_name: neo4j-service
+    image: neo4j:4.1.7
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - ./neo4j/plugins:/plugins
+      - ./neo4j/data:/data
+      - ./neo4j/import:/import
+      - ./neo4j/logs:/logs
+    environment:
+      - NEO4J_AUTH=neo4j/neo4j-admin
+      - NEO4J_dbms_memory_pagecache_size=2G
+      - NEO4J_dbms_memory_heap_max__size=2G
+      - NEO4J_dbms_memory_heap_initial__size=512M
+      - NEO4J_dbms.security.procedures.whitelist=apoc.coll.*,apoc.load.*,apoc.*
+      - NEO4J_apoc_import_file_enabled=true
