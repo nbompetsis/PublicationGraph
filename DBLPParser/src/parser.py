@@ -20,7 +20,7 @@ def log_msg(message):
 
 def context_iter(dblp_path):
     """Create a dblp data iterator of (event, element) pairs for processing"""
-    return etree.iterparse(source=dblp_path, dtd_validation=True, load_dtd=True)  # required dtd
+    return etree.iterparse(source=dblp_path, dtd_validation=True, load_dtd=True, events=('start', 'end'))
 
 
 def clear_element(element):
@@ -59,6 +59,8 @@ def count_pages(pages):
            if find; 0 for (2) if not find. Return the number for (3) if find; -1 for (3) if not find.
     """
     cnt = 0
+    if pages is None:
+        return
     for part in re.compile(r",").split(pages):
         subparts = re.compile(r"-").split(part)
         if len(subparts) > 2:
@@ -159,9 +161,9 @@ def parse_inproceedings(dblp_path, save_path, save_to_csv=False, include_key=Fal
     log_msg("Features information: {}".format(str(info[2])))
 
 
-def parse_proceedings(dblp_path, save_path, save_to_csv=False, include_key=False):
-    type_name = ["proceedings"]
-    features = ['title', 'editor', 'year', 'booktitle', 'series', 'publisher']
+def parse_incollection(dblp_path, save_path, save_to_csv=False, include_key=False):
+    type_name = ["incollection"]
+    features = ['title', 'editor', 'year', 'booktitle', 'publisher', 'pages']
     # Other features are 'volume','isbn' and 'url'.
     info = parse_entity(dblp_path, save_path, type_name, features, save_to_csv=save_to_csv, include_key=include_key)
     log_msg('Total proceedings found: {}, proceedings contain all features: {}, proceedings contain part of '
@@ -169,49 +171,13 @@ def parse_proceedings(dblp_path, save_path, save_to_csv=False, include_key=False
     log_msg("Features information: {}".format(str(info[2])))
 
 
-def parse_book(dblp_path, save_path, save_to_csv=False, include_key=False):
-    type_name = ["book"]
-    features = ['title', 'author', 'publisher', 'isbn', 'year', 'pages']
-    info = parse_entity(dblp_path, save_path, type_name, features, save_to_csv=save_to_csv, include_key=include_key)
-    log_msg('Total books found: {}, books contain all features: {}, books contain part of features: {}'
-            .format(info[0] + info[1], info[0], info[1]))
-    log_msg("Features information: {}".format(str(info[2])))
-
-
-def parse_publications(dblp_path, save_path, save_to_csv=False, include_key=False):
-    type_name = ['article', 'incollection', 'inproceedings']
-    features = ['title', 'year', 'pages']
-    info = parse_entity(dblp_path, save_path, type_name, features, save_to_csv=save_to_csv, include_key=include_key)
-    log_msg('Total publications found: {}, publications contain all features: {}, publications contain part of '
-            'features: {}'.format(info[0] + info[1], info[0], info[1]))
-    log_msg("Features information: {}".format(str(info[2])))
-
-
 def parse_author(dblp_path, save_path, save_to_csv=False):
-    type_name = ['article', 'incollection', 'inproceedings']
+    type_name = ['article', 'book', 'incollection', 'inproceedings']
     log_msg("PROCESS: Start parsing for {}...".format(str(type_name)))
     authors = set()
-    articles = 0
-    incollections = 0
-    inproceedingsCnt = 0
     for _, elem in context_iter(dblp_path):
         if elem.tag in type_name:
-            # authors.update(a.text for a in elem.findall('author'))
-            if elem.tag == 'article' and articles != 10:
-                log_msg("Article \"{}\".\n".format(etree.tostring(elem)))
-                articles = articles + 1
-
-            if elem.tag == 'incollection' and incollections != 10:
-                log_msg("Incollection \"{}\".\n".format(etree.tostring(elem)))
-                incollections = incollections + 1
-
-            if elem.tag == 'inproceedings' and inproceedingsCnt != 10:
-                log_msg("Inproceeding \"{}\".\n".format(etree.tostring(elem)))
-                inproceedingsCnt = inproceedingsCnt + 1
-
-            if inproceedingsCnt == 10 and incollections == 10 and articles == 10:
-                break
-
+            authors.update(a.text for a in elem.findall('author'))
         elif elem.tag not in all_elements:
             continue
         clear_element(elem)
@@ -226,17 +192,68 @@ def parse_author(dblp_path, save_path, save_to_csv=False):
     log_msg("FINISHED...")
 
 
+def parse_publication(dblp_path, authors_file, publication_file, relationship_file, publication_cnt = 1000000, save_to_csv=False, include_key=False):
+    log_msg("PROCESS: Start parsing publications...")
+    publications = ['article', 'incollection', 'inproceedings']
+    article_features = ['title', 'author', 'year', 'journal', 'pages']
+    incollection_features = ['title', 'author', 'year', 'booktitle', 'pages']
+    inproceeding_features = ['title', 'author', 'year', 'booktitle', 'pages']
+    feature = []
+    authors_data = set()
+    publications_data = set()
+    relationship_data = set()
+    for _, elem in context_iter(dblp_path):
+        if elem.tag in publications:        
+            if elem.tag == 'article':
+                feature = article_features
+            elif elem.tag == 'incollection':
+                feature = incollection_features
+            else :
+                feature = inproceeding_features
+            attrib_values = extract_feature(elem, feature, include_key)
+
+            if not attrib_values['title'] or not attrib_values['author']:
+                continue
+
+            if not save_to_csv:
+                log_msg("LOG: Successfully entity \"{}\". Attributes \"{}\".".format(elem.tag, attrib_values))
+            else:
+                authors_data.update(a for a in attrib_values['author'])
+
+            publication_cnt = publication_cnt - 1
+            if publication_cnt == 0:
+                break
+            
+        clear_element(elem)
+    create_file_with_header(authors_file, ['author_name'], authors_data)
+    # create_file_with_header(publication_file, ['title', 'year', 'conference_type', 'conference_name', 'pages'], publications_data)
+    # create_file_with_header(relationship_file, ['author_name', 'title', 'author_order'], relationship_data)
+    log_msg("FINISHED...")
+
+
+def create_file_with_header(file_path, headers, data):
+    log_msg("LOG: Creating file \"{}\". headers \"{}\".".format(file_path, headers))
+    f = open(file_path, 'w', newline='', encoding='utf8')
+    writer = csv.writer(f, delimiter='|')
+    writer.writerow(headers)
+    writer.writerows([d] for d in data)
+    f.close()
+
+
 def main():
     dblp_path = 'dataset/dblp.xml'
-    save_path = 'dataset/article.json'
+    authors_file = 'dataset/authors.csv'
+    publication_file = 'dataset/publications.csv'
+    relationship_file = 'dataset/relationship.csv'
+
     try:
         context_iter(dblp_path)
         log_msg("LOG: Successfully loaded \"{}\".".format(dblp_path))
     except IOError:
         log_msg("ERROR: Failed to load file \"{}\". Please check your XML and DTD files.".format(dblp_path))
         exit()
-    parse_author(dblp_path, save_path, save_to_csv=False)
-
+    
+    parse_publication(dblp_path, authors_file, publication_file, relationship_file, save_to_csv=True, include_key=False)
 
 if __name__ == '__main__':
     main()
