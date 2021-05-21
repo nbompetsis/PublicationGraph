@@ -1,5 +1,6 @@
 # DBLPParser gitignore file
 
+# Ignore Dataset Folder
 /dataset
-# virtual environment of project
+# Ignore Python Virtual environment files
 /dblpparser
