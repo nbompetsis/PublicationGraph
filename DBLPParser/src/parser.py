@@ -200,16 +200,20 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
     inproceeding_features = ['title', 'author', 'year', 'booktitle', 'pages']
     feature = []
     authors_data = set()
-    publications_data = set()
+    publications_data = []
     relationship_data = set()
+    conference_type = ''
     for _, elem in context_iter(dblp_path):
         if elem.tag in publications:        
             if elem.tag == 'article':
                 feature = article_features
+                conference_type = 'journal'
             elif elem.tag == 'incollection':
                 feature = incollection_features
+                conference_type = 'conference'
             else :
                 feature = inproceeding_features
+                conference_type = ''
             attrib_values = extract_feature(elem, feature, include_key)
 
             if not attrib_values['title'] or not attrib_values['author']:
@@ -219,6 +223,9 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
                 log_msg("LOG: Successfully entity \"{}\". Attributes \"{}\".".format(elem.tag, attrib_values))
             else:
                 authors_data.update(a for a in attrib_values['author'])
+                publications_data_line = attrib_values['title'][0] + '|'  + elem.tag + '|' + getAttribute(attrib_values['year']) + '|' + conference_type + '|' + getConferenceName(elem.tag, attrib_values) + '|' + getAttribute(attrib_values['pages'])
+                publications_data.append(publications_data_line.split('|'))
+                # relationship_data_line = attrib_values['title'] + '|' + attrib_values['year'] + '|' + '' + '|' + '' + '|' + attrib_values['pages']
 
             publication_cnt = publication_cnt - 1
             if publication_cnt == 0:
@@ -226,19 +233,33 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
             
         clear_element(elem)
     create_file_with_header(authors_file, ['author_name'], authors_data)
-    # create_file_with_header(publication_file, ['title', 'year', 'conference_type', 'conference_name', 'pages'], publications_data)
+    create_file_with_header(publication_file, ['title', 'type', 'year', 'conference_type', 'conference_name', 'pages'], publications_data, True)
     # create_file_with_header(relationship_file, ['author_name', 'title', 'author_order'], relationship_data)
     log_msg("FINISHED...")
 
 
-def create_file_with_header(file_path, headers, data):
+def create_file_with_header(file_path, headers, data, notSet=False):
     log_msg("LOG: Creating file \"{}\". headers \"{}\".".format(file_path, headers))
     f = open(file_path, 'w', newline='', encoding='utf8')
     writer = csv.writer(f, delimiter='|')
     writer.writerow(headers)
-    writer.writerows([d] for d in data)
+    if notSet:
+        writer.writerows(data)
+    else:
+        writer.writerows([d] for d in data)
     f.close()
 
+def getAttribute(attr, defaultValue = ''):
+    if attr and len(attr) > 0:
+        return attr[0]
+    return defaultValue
+    
+def getConferenceName(type, attr, defaultValue = ''):
+    if type == 'article':
+        return getAttribute(attr['journal'])
+    elif type == 'incollection':
+        return getAttribute(attr['booktitle']) 
+    return defaultValue
 
 def main():
     dblp_path = 'dataset/dblp.xml'
