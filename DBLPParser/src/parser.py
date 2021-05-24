@@ -2,6 +2,7 @@ from lxml import etree
 from datetime import datetime
 import csv
 import re
+import argparse
 
 def log_msg(message):
     """Produce a log with current time"""
@@ -178,6 +179,13 @@ def main():
     publication_file = 'dataset/publications.csv'
     relationship_file = 'dataset/relationship.csv'
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-number", help="Number of publications")
+    publication_cnt = 1000000
+    args = parser.parse_args()
+    if args.number :
+        publication_cnt = int(args.number)
+
     try:
         context_iter(dblp_path)
         log_msg("LOG: Successfully loaded \"{}\".".format(dblp_path))
@@ -185,7 +193,7 @@ def main():
         log_msg("ERROR: Failed to load file \"{}\". Please check your XML and DTD files.".format(dblp_path))
         exit()
     
-    parse_publication(dblp_path, authors_file, publication_file, relationship_file, save_to_csv=True, include_key=False)
+    parse_publication(dblp_path, authors_file, publication_file, relationship_file, publication_cnt, save_to_csv=True, include_key=False)
 
 if __name__ == '__main__':
     main()
