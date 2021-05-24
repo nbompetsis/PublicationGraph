@@ -171,25 +171,17 @@ def parse_incollection(dblp_path, save_path, save_to_csv=False, include_key=Fals
     log_msg("Features information: {}".format(str(info[2])))
 
 
-def parse_author(dblp_path, save_path, save_to_csv=False):
-    type_name = ['article', 'book', 'incollection', 'inproceedings']
-    log_msg("PROCESS: Start parsing for {}...".format(str(type_name)))
-    authors = set()
-    for _, elem in context_iter(dblp_path):
-        if elem.tag in type_name:
-            authors.update(a.text for a in elem.findall('author'))
-        elif elem.tag not in all_elements:
-            continue
-        clear_element(elem)
-    if save_to_csv:
-        f = open(save_path, 'w', newline='', encoding='utf8')
-        writer = csv.writer(f, delimiter=',')
-        writer.writerows([a] for a in sorted(authors))
-        f.close()
-    else:
-        with open(save_path, 'w', encoding='utf8') as f:
-            f.write('\n'.join(sorted(authors)))
-    log_msg("FINISHED...")
+def parse_author_publication_relation(relationship_data, attrib_values):
+    if len(attrib_values['author']) == 1:
+        relationship_data.append([attrib_values['author'][0], attrib_values['title'][0], 'first'])
+    elif len(attrib_values['author']) > 1:
+        for i in range(len(attrib_values['author'])):
+            if i == 0:
+                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'first'])
+            elif i == (len(attrib_values['author']) - 1):
+                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'last'])
+            else:
+                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'middle'])
 
 
 def parse_publication(dblp_path, authors_file, publication_file, relationship_file, publication_cnt = 1000000, save_to_csv=False, include_key=False):
@@ -201,7 +193,7 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
     feature = []
     authors_data = set()
     publications_data = []
-    relationship_data = set()
+    relationship_data = []
     conference_type = ''
     for _, elem in context_iter(dblp_path):
         if elem.tag in publications:        
@@ -225,7 +217,7 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
                 authors_data.update(a for a in attrib_values['author'])
                 publications_data_line = attrib_values['title'][0] + '|'  + elem.tag + '|' + getAttribute(attrib_values['year']) + '|' + conference_type + '|' + getConferenceName(elem.tag, attrib_values) + '|' + getAttribute(attrib_values['pages'])
                 publications_data.append(publications_data_line.split('|'))
-                # relationship_data_line = attrib_values['title'] + '|' + attrib_values['year'] + '|' + '' + '|' + '' + '|' + attrib_values['pages']
+                parse_author_publication_relation(relationship_data, attrib_values)
 
             publication_cnt = publication_cnt - 1
             if publication_cnt == 0:
@@ -233,8 +225,8 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
             
         clear_element(elem)
     create_file_with_header(authors_file, ['author_name'], authors_data)
-    create_file_with_header(publication_file, ['title', 'type', 'year', 'conference_type', 'conference_name', 'pages'], publications_data, True)
-    # create_file_with_header(relationship_file, ['author_name', 'title', 'author_order'], relationship_data)
+    create_file_with_header(publication_file, ['title', 'type', 'year', 'conference_type', 'conference_name', 'pages'], publications_data, notSet=True)
+    create_file_with_header(relationship_file, ['author_name', 'title', 'author_order'], relationship_data, notSet=True)
     log_msg("FINISHED...")
 
 
