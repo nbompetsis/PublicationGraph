@@ -1,7 +1,7 @@
 from lxml import etree
 from datetime import datetime
 import csv
-
+import re
 
 def log_msg(message):
     """Produce a log with current time"""
