@@ -34,6 +34,9 @@ def getConferenceName(type, attr, defaultValue = ''):
         return getAttribute(attr['booktitle']) 
     return defaultValue
 
+def getWord(word):
+    return str(word).replace('"','\'').replace('\n', '')
+
 
 def count_pages(pages):
     """Borrowed from: https://github.com/billjh/dblp-iter-parser/blob/master/iter_parser.py
@@ -102,41 +105,41 @@ def extract_feature(elem, features, include_key=False):
     return attribs
 
 
-def parse_author_publication_relations(relationship_data, attrib_values):
+def parse_author_publication_relations(relationship_data, attrib_values, publications_id):
     if len(attrib_values['author']) == 1:
-        relationship_data.append([attrib_values['author'][0], attrib_values['title'][0], 'first'])
+        relationship_data.append([attrib_values['author'][0], publications_id, 'first'])
     elif len(attrib_values['author']) > 1:
         for i in range(len(attrib_values['author'])):
             if i == 0:
-                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'first'])
+                relationship_data.append([attrib_values['author'][i], publications_id, 'first'])
             elif i == (len(attrib_values['author']) - 1):
-                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'last'])
+                relationship_data.append([attrib_values['author'][i], publications_id, 'last'])
             else:
-                relationship_data.append([attrib_values['author'][i], attrib_values['title'][0], 'middle'])
+                relationship_data.append([attrib_values['author'][i], publications_id, 'middle'])
 
 
-def parse_publication(dblp_path, authors_file, publication_file, relationship_file, publication_cnt = 1000000, save_to_csv=False, include_key=False):
+def parse_publication(dblp_path, publication_cnt = 1000000, save_to_csv=False, include_key=False):
     log_msg("PROCESS: Start parsing publications...")
     publications = ['article', 'incollection', 'inproceedings']
-    article_features = ['title', 'author', 'year', 'journal', 'pages']
-    incollection_features = ['title', 'author', 'year', 'booktitle', 'pages']
-    inproceeding_features = ['title', 'author', 'year', 'booktitle', 'pages']
+    article_features = ['title', 'author', 'year', 'journal', 'pages', 'ee']
+    incollection_features = ['title', 'author', 'year', 'booktitle', 'pages', 'ee']
+    inproceeding_features = ['title', 'author', 'year', 'booktitle', 'pages', 'ee']
     feature = []
     authors_data = set()
     publications_data = []
     relationship_data = []
-    conference_type = ''
+    journal_data = set()
+    conference_data = set()
+    journal_issued_data = []
+    conference_issued_data = []
     for _, elem in context_iter(dblp_path):
         if elem.tag in publications:        
             if elem.tag == 'article':
                 feature = article_features
-                conference_type = 'journal'
             elif elem.tag == 'incollection':
                 feature = incollection_features
-                conference_type = 'conference'
             else :
                 feature = inproceeding_features
-                conference_type = ''
             attrib_values = extract_feature(elem, feature, include_key)
 
             if not attrib_values['title'] or not attrib_values['author']:
@@ -146,18 +149,32 @@ def parse_publication(dblp_path, authors_file, publication_file, relationship_fi
                 log_msg("LOG: Successfully entity \"{}\". Attributes \"{}\".".format(elem.tag, attrib_values))
             else:
                 authors_data.update(a for a in attrib_values['author'])
-                publications_data_line = attrib_values['title'][0] + '|'  + elem.tag + '|' + getAttribute(attrib_values['year']) + '|' + conference_type + '|' + getConferenceName(elem.tag, attrib_values) + '|' + getAttribute(attrib_values['pages'])
+                publications_id = getAttribute(attrib_values['ee'], getWord(attrib_values['title'][0]) + '_' + getAttribute(attrib_values['year']))
+                publications_data_line = publications_id + '|' + getWord(attrib_values['title'][0]) + '|'  + elem.tag + '|' + getAttribute(attrib_values['year']) + '|' + getAttribute(attrib_values['pages'], '0')
                 publications_data.append(publications_data_line.split('|'))
-                parse_author_publication_relations(relationship_data, attrib_values)
-
+                parse_author_publication_relations(relationship_data, attrib_values, publications_id)
+                if elem.tag == 'article':
+                    journal_data.update(a for a in attrib_values['journal'])
+                    journal_issued_data_line = publications_id + '|' + getAttribute(attrib_values['journal'])
+                    journal_issued_data.append(journal_issued_data_line.split('|'))
+                elif elem.tag == 'inproceedings':
+                    conference_data.update(a for a in attrib_values['booktitle'])
+                    conference_issued_data_line = publications_id + '|' + getAttribute(attrib_values['booktitle'])
+                    conference_issued_data.append(conference_issued_data_line.split('|'))
+                
             publication_cnt = publication_cnt - 1
             if publication_cnt == 0:
                 break
             
         clear_element(elem)
-    create_file_with_header(authors_file, ['author_name'], authors_data)
-    create_file_with_header(publication_file, ['title', 'type', 'year', 'conference_type', 'conference_name', 'pages'], publications_data, notSet=True)
-    create_file_with_header(relationship_file, ['author_name', 'title', 'author_order'], relationship_data, notSet=True)
+    create_file_with_header('dataset/authors.csv', ['author_name'], authors_data)
+    create_file_with_header('dataset/publications.csv', ['id', 'title', 'type', 'year', 'pages'], publications_data, notSet=True)
+    create_file_with_header('dataset/relationship.csv', ['author_name', 'id', 'author_order'], relationship_data, notSet=True)
+    create_file_with_header('dataset/journals.csv', ['name'], journal_data)
+    create_file_with_header('dataset/conferences.csv', ['name'], conference_data)
+    create_file_with_header('dataset/journals_relationship.csv', ['id', 'name'], journal_issued_data, notSet=True)
+    create_file_with_header('dataset/conferences_relationship.csv', ['id', 'name'], conference_issued_data, notSet=True)
+
     log_msg("FINISHED...")
 
 
@@ -175,9 +192,6 @@ def create_file_with_header(file_path, headers, data, notSet=False):
 
 def main():
     dblp_path = 'dataset/dblp.xml'
-    authors_file = 'dataset/authors.csv'
-    publication_file = 'dataset/publications.csv'
-    relationship_file = 'dataset/relationship.csv'
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-number", help="Number of publications")
@@ -193,7 +207,7 @@ def main():
         log_msg("ERROR: Failed to load file \"{}\". Please check your XML and DTD files.".format(dblp_path))
         exit()
     
-    parse_publication(dblp_path, authors_file, publication_file, relationship_file, publication_cnt, save_to_csv=True, include_key=False)
+    parse_publication(dblp_path, publication_cnt, save_to_csv=True, include_key=False)
 
 if __name__ == '__main__':
     main()
