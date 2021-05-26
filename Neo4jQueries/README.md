@@ -1,0 +1,95 @@
+# Neo4j cypher queries
+
+Your database should be able to answer the following queries.
+
+## Queries
+
+1.  Find the titles (title, year) of publications that a particular author has published.
+```
+Cypher Query
+```
+
+2.  Find the co-authors of an author (name, number of co-authorships) for a particular year.
+```
+Cypher Query
+```
+
+3.  Find the top-K authors (name, count) with regard to most conference/journal publications. (2 methods)
+```
+Cypher Query
+```
+
+4.  Find the top-K authors (name, count) with regard to most co-authors in a single work.
+```
+Cypher Query
+```
+
+5.  Find the top-K authors (name, count) with regard to most co-authors in a particular year.
+```
+Cypher Query
+```
+
+6.  Find the top-K authors (name, count) with regard to most active years.
+```
+Cypher Query
+```
+
+7.  Find the top-K authors (name, count) with regard to most co-authors that have not published together.
+```
+Cypher Query
+```
+
+8.  Find the top-K authors (name, count) with regard to largest average number of journal publications per year (consider only active years).
+```
+Cypher Query
+```
+
+9.  Find the top-K authors (name, count) that a given author has not worked with, with regard to most co-authorships with authors that the given author has worked with.
+```
+Cypher Query
+```
+
+10.  Find the authors (name, count) that have published more than three works in a given single year.
+```
+Cypher Query
+```
+
+11.  Find the number of pages that a particular author has published in a given year.
+```
+Cypher Query
+```
+
+12.  Find the top-K authors (name, count) with regard to articles published in a particular journal as a first/last author in a given year. (2 methods)
+```
+Cypher Query
+```
+
+13.  Find the three authors that have appeared as co-authors for the most times in a particular journal.
+```
+Cypher Query
+```
+
+14.  Find pairs of authors that have appeared in different parts of the same book and have never co-authored a work.
+```
+Cypher Query
+```
+
+15.  Find the authors that have published work for K consecutive years.
+```
+Cypher Query
+```
+
+16.  Find the top-K authors with regard to average number of co-authors in their publications.
+```
+Cypher Query
+```
+
+17.  Find the authors of consecutively published papers with more than a given amount of years between them.
+```
+Cypher Query
+```
+
+18.  Find the author (name, count) with the most parts in a single book of collective works.
+```
+Cypher Query
+```
