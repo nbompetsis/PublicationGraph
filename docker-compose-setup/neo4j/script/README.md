@@ -1,9 +1,10 @@
-# Load csv commands
+# Load graph data (CSV files)
 
-Execute the following command to import csv files into Neo4J
+Execute the following commands to create constraints and import data to Neo4j
 
+1.  Author 
 ```
-# Author constraints
+# Author constraint
 CREATE CONSTRAINT author_name_unique ON (author:Author) ASSERT author.name IS UNIQUE
 
 # Load Authors
@@ -11,14 +12,12 @@ CREATE CONSTRAINT author_name_unique ON (author:Author) ASSERT author.name IS UN
 LOAD CSV WITH HEADERS FROM 'file:///authors.csv' AS row
 WITH row WHERE row.author_name IS NOT NULL
 MERGE (a:Author {name: row.author_name});
+```
 
-
-# Publications constraints
+2.  Publication
+```
+# Publications constraint
 CREATE CONSTRAINT publication_title_unique ON (p:Publication) ASSERT p.id IS UNIQUE
-
-# DROP CONSTRAINT
-# ON (n:Publication)
-# ASSERT n.title IS UNIQUE
 
 # Load Publications
 :auto USING PERIODIC COMMIT
@@ -32,7 +31,10 @@ CREATE (p:Publication {
 					    year: coalesce(row.year, ''),
 					    pages: coalesce(row.pages, '')});
 
+```
 
+3. Author -[PUBLISHED] -> Publication relationship
+```
 # LOAD relationship author - PUBLISHED -> publication
 :auto USING PERIODIC COMMIT
 LOAD CSV WITH HEADERS FROM 'file:///relationship.csv' AS line
@@ -43,10 +45,13 @@ CREATE (a1)-[con:PUBLISHED {order: line.author_order}]->(o2)
 
 # :auto USING PERIODIC COMMIT
 # LOAD CSV WITH HEADERS FROM 'file:///relationship.csv' AS line
-# MATCH (a:Author {name: line.author_name}),(p:Publication {title:line.title})
-# CREATE (a)-[pub:PUBLISHED_NEW {order: line.author_order}]->(p)
+# MATCH (a:Author {name: line.author_name}),(p:Publication {id:line.id})
+# CREATE (a)-[pub:PUBLISHED {order: line.author_order}]->(p)
 
+```
 
+4. Journal
+```
 # Journals constraint
 CREATE CONSTRAINT journal_name_unique ON (j:Journal) ASSERT j.name IS UNIQUE
 
@@ -55,7 +60,10 @@ CREATE CONSTRAINT journal_name_unique ON (j:Journal) ASSERT j.name IS UNIQUE
 LOAD CSV WITH HEADERS FROM 'file:///journals.csv' AS row
 WITH row WHERE row.name IS NOT NULL
 MERGE (j:Journal {name: row.name});
+```
 
+5. Publication -[ISSUED]-> Journal relationship
+```
 # LOAD relationship Publications - ISSUED -> Journals
 :auto USING PERIODIC COMMIT
 LOAD CSV WITH HEADERS FROM 'file:///journals_relationship.csv' AS line
@@ -64,7 +72,10 @@ MERGE (a1:Publication {id:line.id})
 MERGE (a2:Journal {name:line.name})
 CREATE (a1)-[iss:ISSUED]->(a2) 
 
+```
 
+6. Conference
+```
 # Conferences constraint
 CREATE CONSTRAINT conference_name_unique ON (c:Conference) ASSERT c.name IS UNIQUE
 
@@ -74,6 +85,10 @@ LOAD CSV WITH HEADERS FROM 'file:///conferences.csv' AS row
 WITH row WHERE row.name IS NOT NULL
 MERGE (con:Conference {name: row.name});
 
+```
+
+7. Publication -[ISSUED]-> Conference
+```
 # LOAD relationship Publications - ISSUED -> Conferences
 :auto USING PERIODIC COMMIT
 LOAD CSV WITH HEADERS FROM 'file:///conferences_relationship.csv' AS line
