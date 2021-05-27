@@ -29,7 +29,12 @@ LIMIT 5 // K = 5
 
 4.  Find the top-K authors (name, count) with regard to most co-authors in a single work.
 ```
-Cypher Query
+MATCH (a1:Author)-[:PUBLISHED]->(p:Publication)<-[:PUBLISHED]-(a2:Author)
+WITH a1, a2, size(collect(p)) as commonPublications
+WHERE commonPublications = 1
+RETURN a1, COUNT(a2) as NUM_CO_AUTHORS
+ORDER BY NUM_CO_AUTHORS DESC
+LIMIT 5 // K = 5
 ```
 
 5.  Find the top-K authors (name, count) with regard to most co-authors in a particular year.
