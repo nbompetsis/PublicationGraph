@@ -6,17 +6,25 @@ Your database should be able to answer the following queries.
 
 1.  Find the titles (title, year) of publications that a particular author has published.
 ```
-Cypher Query
+MATCH (Author {name: 'Sanjay Jain 0001'})-[:PUBLISHED]->(p:Publication)
+WHERE p.year <> '' AND p.title <> ''
+RETURN p.title AS Title, p.year AS YEAR
 ```
 
 2.  Find the co-authors of an author (name, number of co-authorships) for a particular year.
 ```
-Cypher Query
+MATCH (a1:Author{name: 'Christoph Meinel'})-[:PUBLISHED]->(p:Publication)<-[:PUBLISHED]-(a2:Author)
+WHERE p.year <> '' AND p.year = '1997'
+RETURN a1.name , COUNT(a2) as NUM_CO_AUTHORS
+ORDER BY NUM_CO_AUTHORS DESC
 ```
 
 3.  Find the top-K authors (name, count) with regard to most conference/journal publications. (2 methods)
 ```
-Cypher Query
+MATCH (a1:Author)-[PUBLISHED]->(p:Publication)-[ISSUED]->()
+RETURN a1.name , COUNT(p) as NUM_PUB
+ORDER BY NUM_PUB DESC
+LIMIT 5 // K = 5
 ```
 
 4.  Find the top-K authors (name, count) with regard to most co-authors in a single work.
