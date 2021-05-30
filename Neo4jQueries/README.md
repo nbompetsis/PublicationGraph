@@ -144,21 +144,20 @@ WITH a1, p
 ORDER BY p.year
 WITH a1, (collect(distinct toInteger(p.year))) as YEARS
 WITH a1, reduce(acc = [], i IN range(0, size(YEARS) - 1) | 
-    CASE YEARS[i] >= YEARS[i-1]
+    CASE YEARS[i] = YEARS[i-1] + 1
       WHEN true THEN [j IN range(0, size(acc) - 1) |
           CASE j = size(acc) - 1
-            WHEN true THEN acc[j] + [p[i]]
+            WHEN true THEN acc[j] + [YEARS[i]]
             ELSE acc[j]
           END
         ]
-      ELSE acc + [[p[i]]]
+      ELSE acc + [[YEARS[i]]]
     END
-  ) AS streaks // (1)
-UNWIND streaks AS streak
-WITH s, streak
-RETURN a1.name, (collect(distinct toInteger(p.year))) as YEARS
-LIMIT 10
-
+  ) AS AGG__CONS_YEARS // (1)
+UNWIND AGG__CONS_YEARS AS CONS_YEARS
+WITH a1, CONS_YEARS
+WHERE size(CONS_YEARS) >= 5 // K = 5
+RETURN a1.name, CONS_YEARS
 ```
 
 16.  Find the top-K authors with regard to average number of co-authors in their publications.
