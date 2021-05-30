@@ -167,7 +167,14 @@ Cypher Query
 
 17.  Find the authors of consecutively published papers with more than a given amount of years between them.
 ```
-Cypher Query
+MATCH (a1:Author)-[PUBLISHED]->(p:Publication)
+WHERE p.year <> ''
+WITH a1, p
+ORDER BY p.year
+WITH a1, (collect(distinct toInteger(p.year))) as YEARS
+WITH a1, YEARS, [i in range(0, size(YEARS)-2) WHERE YEARS[i+1] = YEARS[i] + 37 | i] AS CONS_YEARS // K=37
+WHERE size(CONS_YEARS) >= 1
+RETURN a1.name, YEARS, CONS_YEARS
 ```
 
 18.  Find the author (name, count) with the most parts in a single book of collective works.
