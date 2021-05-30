@@ -14,7 +14,7 @@ RETURN p.title AS Title, p.year AS YEAR
 2.  Find the co-authors of an author (name, number of co-authorships) for a particular year.
 ```
 MATCH (a1:Author{name: 'Christoph Meinel'})-[:PUBLISHED]->(p:Publication)<-[:PUBLISHED]-(a2:Author)
-WHERE p.year <> '' AND p.year = '1997'
+WHERE p.year = '1997'
 RETURN a1.name , COUNT(a2) as NUM_CO_AUTHORS
 ORDER BY NUM_CO_AUTHORS DESC
 ```
@@ -107,9 +107,9 @@ Cypher Query
 10.  Find the authors (name, count) that have published more than three works in a given single year.
 ```
 MATCH (a1:Author)-[PUBLISHED]->(p:Publication)
-WHERE p.year <> '' AND p.year = '1997'
+WHERE p.year = '1997'
 WITH a1, size(collect(distinct p)) as PUBLICATION
-WHERE PUBLICATION => 3
+WHERE PUBLICATION >= 3
 RETURN a1.name, PUBLICATION as COUNT
 ORDER BY COUNT DESC
 ```
@@ -117,13 +117,15 @@ ORDER BY COUNT DESC
 11.  Find the number of pages that a particular author has published in a given year.
 ```
 MATCH (a1:Author{name:'Gerrit Bleumer'})-[PUBLISHED]->(p:Publication)
-WHERE p.year <> '' and p.year = '2011'
+WHERE p.year = '2011'
 return a1.name, sum(toInteger(p.pages))
 ```
 
 12.  Find the top-K authors (name, count) with regard to articles published in a particular journal as a first/last author in a given year. (2 methods)
 ```
-Cypher Query
+MATCH (a1:Author)-[pub:PUBLISHED]->(p:Publication)-[ISSUED]->(j:Journal) 
+WHERE p.year = '2018' and j.name = 'meltdownattack.com' and (pub.order = 'first' or pub.order = 'last')
+return a1.name, count(p)
 ```
 
 13.  Find the three authors that have appeared as co-authors for the most times in a particular journal.
