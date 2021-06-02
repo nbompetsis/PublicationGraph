@@ -96,7 +96,18 @@ RETURN p.id AS id, p.name AS name
 
 8.  Find the top-K authors (name, count) with regard to largest average number of journal publications per year (consider only active years).
 ```
-Cypher Query
+MATCH (p1:Publication)-[:ISSUED]->(j:Journal)<-[:ISSUED]-(p2:Publication)
+with p1, p2
+MATCH (p1)<-[:PUBLISHED]-(a1:Author)-[:PUBLISHED]->(p2)
+WHERE p1.year <> '' AND p2.year <> '' AND p1.year = p2.year
+WITH a1, collect(DISTINCT {year: p1.year, title: p1.title}) AS YEAR_PUB
+UNWIND YEAR_PUB as row
+with a1, row.year as year
+order by year
+with a1, year, count(year) as CNT_PER_YEAR
+return a1.name, round(AVG(CNT_PER_YEAR)) as AVG_PER_YEAR
+order by AVG_PER_YEAR DESC
+LIMIT 10 // K=10
 ```
 
 9.  Find the top-K authors (name, count) that a given author has not worked with, with regard to most co-authorships with authors that the given author has worked with.
@@ -206,5 +217,10 @@ RETURN a1.name, YEARS, CONS_YEARS
 
 18.  Find the author (name, count) with the most parts in a single book of collective works.
 ```
-Cypher Query
+MATCH (a1:Author)-[:PUBLISHED]->()-[:ISSUED]->(c:Conference)
+WITH a1, c
+MATCH (a1)-[:PUBLISHED]->(p:Publication)-[:ISSUED]->(c)
+WITH a1, c, size(collect(distinct p)) as NUM_PUB
+return a1.name, NUM_PUB, c.name
+ORDER BY NUM_PUB DESC
 ```
