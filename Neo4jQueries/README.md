@@ -130,7 +130,28 @@ return a1.name, count(p)
 
 13.  Find the three authors that have appeared as co-authors for the most times in a particular journal.
 ```
-Cypher Query
+MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
+with p
+MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author),
+(a2:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author),
+(a3:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a1:Author)
+return distinct a1.name
+
+
+
+MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
+with p
+MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author), (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author)
+return distinct a1.name, count(p) as NUM_PUB
+order by NUM_PUB desc
+
+
+MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
+with p
+MATCH (a1:Author{name: 'Rudi Studer'})-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author)
+with a1, a2 , p
+return distinct a1.name, a2.name, p.title, count(p)
+
 ```
 
 14.  Find pairs of authors that have appeared in different parts of the same book and have never co-authored a work.
@@ -164,7 +185,11 @@ RETURN a1.name, CONS_YEARS
 
 16.  Find the top-K authors with regard to average number of co-authors in their publications.
 ```
-Cypher Query
+MATCH (a1:Author)-[PUBLISHED]->(p:Publication)<-[:PUBLISHED]-(a2:Author)
+WITH distinct a1, count(distinct a2) as COUNT_AUTHORS, count(distinct p) as COUNT_PUB 
+RETURN a1.name,  COUNT_AUTHORS, COUNT_PUB, COUNT_AUTHORS / COUNT_PUB as AVG_CO_AUTHORS
+ORDER BY AVG_CO_AUTHORS DESC
+LIMIT 5 // K = 5
 ```
 
 17.  Find the authors of consecutively published papers with more than a given amount of years between them.
