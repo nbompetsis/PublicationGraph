@@ -58,39 +58,21 @@ LIMIT 5 // K = 5
 
 7.  Find the top-K authors (name, count) with regard to most distinct pairs of co-authors that have not published together.
 ```
-MATCH (a1:Author)-[r1:PUBLISHED]->(p1:Publication)<-[:PUBLISHED]-(a2:Author), (a1:Author)-[r2:PUBLISHED]->(p2:Publication)<-[:PUBLISHED]-(a3:Author)
-WHERE p1.id <> p2.id 
-with a1, a2, a3, r1, r2
-WHERE NOT ((a2)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a3))
-return distinct a1.name, count(distinct r1) + count(distinct r2) as MOST_DISTINCT_PAIRS
-ORDER BY MOST_DISTINCT_PAIRS ASC
-LIMIT 5 // K = 5
-
-A, B, C -> P1 // A -> P1 <- B, A -> P1 <- C
-
-A, D, E -> P2 // A -> P2 <- D, A -> P2 <- E
-
-C, E -> P3
-
-
-MATCH (a1:Author)-[:PUBLISHED]->(p1:Publication)<-[:PUBLISHED]-(a2:Author), (a1:Author)-[r2:PUBLISHED]->(p2:Publication)<-[:PUBLISHED]-(a3:Author)
-WHERE p1.id <> p2.id and a2 <> a3
-return distinct a1.name //, count(distinct r1) + count(distinct r2) as MOST_DISTINCT_PAIRS
-ORDER BY MOST_DISTINCT_PAIRS ASC
-LIMIT 5 // K = 5
-
-
-
-MATCH (a1:Author)-[:PUBLISHED]->(p1:Publication)<-[:PUBLISHED]-(a2:Author), (a1:Author)-[:PUBLISHED]->(p2:Publication)<-[:PUBLISHED]-(a3:Author)
-WHERE p1.id <> p2.id
-WI
-MATCH (p2)-[:CAST]->(m:Movie)<-[:CAST]-(p:Person)
-WHERE p.id <> 1090464 AND p2 <> p
-WITH DISTINCT p
-MATCH (p1:Person {id: 1090464})
-WHERE NOT (p)-[:CAST]->(:Movie)<-[:CAST]-(p1)
-RETURN p.id AS id, p.name AS name
-
+MATCH (a1:Author)-[:PUBLISHED]->(p1:Publication)<-[:PUBLISHED]-(a2:Author)
+with a1, a2, p1
+MATCH (a1)-[:PUBLISHED]->(p2:Publication)<-[:PUBLISHED]-(a3:Author)
+with a1, a2, a3, p1, p2
+where p1 <> p2 and a1 <> a2 and a1 <> a3 and a2 <> a3 
+and ID(p1) < ID(p2) and ID(a1) < ID(a3) and ID(a2) < ID(a3) 
+and not (a2)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a3)
+with collect(DISTINCT {author1: a1.name, author2: a2.name, author3: a3.name}) AS AUTHORS
+UNWIND AUTHORS as row
+with row.author1 as author1, row.author2 as author2, row.author3 as author3
+order by author1 desc
+with author1, size(collect(author2)) as CNT_PAIR_1 , size(collect(author3)) as CNT_PAIR_2 
+return author1, (CNT_PAIR_1 + CNT_PAIR_2) / 2 as FINAL_SUM
+order by FINAL_SUM desc
+limit 10 // k =10
 
 ```
 
@@ -141,33 +123,32 @@ return a1.name, count(p)
 
 13.  Find the three authors that have appeared as co-authors for the most times in a particular journal.
 ```
-MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
+MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'Universität Trier, Mathematik/Informatik, Forschungsbericht'})
 with p
-MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author),
-(a2:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author),
-(a3:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a1:Author)
-return distinct a1.name
-
-
-
-MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
-with p
-MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author), (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author)
-return distinct a1.name, count(p) as NUM_PUB
-order by NUM_PUB desc
-
-
-MATCH (p:Publication)-[ISSUED]->(j:Journal{name: 'LILOG-Report'})
-with p
-MATCH (a1:Author{name: 'Rudi Studer'})-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author)
-with a1, a2 , p
-return distinct a1.name, a2.name, p.title, count(p)
-
+MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a2:Author)
+with a1, a2, p
+MATCH (a1:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author)
+with a1, a2, a3, p
+MATCH (a2:Author)-[:PUBLISHED]->(p)<-[:PUBLISHED]-(a3:Author)
+where a1 <> a2 and a1 <> a3 and a2 <> a3 and ID(a1) < ID(a2) and ID(a1) < ID(a3) and ID(a2) < ID(a3)
+with a1, a2 , a3, size(collect(p)) as cnt
+with collect(DISTINCT {author1: a1.name, author2: a2.name, author3: a3.name, cnt: cnt}) AS AUTHORS
+UNWIND (AUTHORS) as row
+with row.author1 as author1, row.author2 as author2, row.author3 as author3, row.cnt as cnt
+return author1, author2, author3, cnt
+order by cnt
 ```
 
 14.  Find pairs of authors that have appeared in different parts of the same book and have never co-authored a work.
 ```
-Cypher Query
+MATCH (a1:Author)-[:PUBLISHED]->(p1:Publication)-[:ISSUED]->(c:Conference)<-[:ISSUED]-(p2:Publication)<-[:PUBLISHED]-(a2:Author)
+with a1, a2
+where a1 <> a2 and ID(a1) < ID(a2) and not (a1)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a2)
+with collect(DISTINCT {author1: a1.name, author2: a2.name}) AS PAIRS
+UNWIND PAIRS as row
+with row.author1 as author1, row.author2 as author2
+return author1, author2
+
 ```
 
 15.  Find the authors that have published work for K consecutive years.
