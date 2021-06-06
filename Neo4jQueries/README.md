@@ -94,7 +94,17 @@ LIMIT 10 // K=10
 
 9.  Find the top-K authors (name, count) that a given author has not worked with, with regard to most co-authorships with authors that the given author has worked with.
 ```
-Cypher Query
+MATCH (a1)-[:PUBLISHED]->(p:Publication)<-[:PUBLISHED]-(a2:Author{name: 'Christoph Meinel'})
+WHERE a1 <> a2
+WITH DISTINCT a1, a2, p
+MATCH (a1)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a3:Author)
+WHERE a1 <> a3 and a2 <> a3
+WITH DISTINCT a3, a1, a2, p
+WHERE NOT (a3)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a2)
+WITH a3, size(collect(distinct p)) as CO_AUTHORS
+RETURN a3.name, CO_AUTHORS
+ORDER BY CO_AUTHORS DESC
+LIMIT 5 // k=5
 ```
 
 10.  Find the authors (name, count) that have published more than three works in a given single year.
