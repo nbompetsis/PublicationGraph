@@ -2,7 +2,6 @@
 
 ## Curl commands of RestAPI requests
 
-Regarding the project's cypher queries (link here), below you will find the requests / responses of RestAPI which is called to respond via HTTP protocol.  
 Below you will find the requests / responses of RestAPI which returns the information from cypher queries of PublicationGraph project ([link here](../../Neo4jQueries/README.md)). via HTTP protocol.
 
 1.  Find the titles (title, year) of publications that a particular author has published.
@@ -68,7 +67,7 @@ curl --location --request GET 'http://localhost:5000/api/query2?name=Christoph%2
 ```
 
 3.  
-    a.  Find the top-K authors (name, count) with regard to most conference
+    a.  Find the top-K authors (name, count) with regard to most conference.
 * Request
 ```
 curl --location --request GET 'http://localhost:5000/api/query3/conferences?k=2'
@@ -88,7 +87,7 @@ curl --location --request GET 'http://localhost:5000/api/query3/conferences?k=2'
 ```
 
 3.  
-    b.  Find the top-K authors (name, count) with regard to most journal
+    b.  Find the top-K authors (name, count) with regard to most journal.
 * Request
 ```
 curl --location --request GET 'http://localhost:5000/api/query3/journals?k=2'

@@ -9,6 +9,7 @@ According to the graph schema of project, below you will find 18 cypher queries 
 MATCH (Author {name: 'Sanjay Jain 0001'})-[:PUBLISHED]->(p:Publication)
 WHERE p.year <> '' AND p.title <> ''
 RETURN p.title AS TITLE, p.year AS YEAR
+ORDER BY YEAR DESC
 ```
 
 2.  Find the co-authors of an author (name, number of co-authorships) for a particular year.
