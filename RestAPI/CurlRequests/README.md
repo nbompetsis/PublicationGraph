@@ -2,7 +2,7 @@
 
 ## Curl commands of RestAPI requests
 
-Below you will find the requests / responses of RestAPI which returns the information from cypher queries of PublicationGraph project ([link here](../../Neo4jQueries/README.md)). via HTTP protocol.
+Below you will find the requests / responses of RestAPI which returns the information from cypher queries of PublicationGraph project ([link here](../../Neo4jQueries/README.md)) via HTTP protocol.
 
 1.  Find the titles (title, year) of publications that a particular author has published.
 * Request
