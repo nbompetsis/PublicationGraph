@@ -1,10 +1,14 @@
 import logging
 from flask import Flask, json, request
 import queryController
+from py2neo import Graph
 
 app = Flask(__name__)
+app.config.from_object('config')
 app_path = '/api/'
-logging.basicConfig(level=logging.DEBUG)
+
+graph = Graph(host=app.config["DB_NAME"], password=app.config["DB_PASS"])
+queryController.init_db()
 
 @app.route("/")
 def hello_app():

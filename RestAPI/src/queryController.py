@@ -1,7 +1,9 @@
-from py2neo import Graph
 from string import Template
 
-graph = Graph(password='neo4j-admin')
+def init_db(graph_):
+    global graph
+    graph = graph_
+
 
 def query1(name):
     query = Template('''
