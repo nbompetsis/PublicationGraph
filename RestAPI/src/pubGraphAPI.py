@@ -8,7 +8,7 @@ app.config.from_object('config')
 app_path = '/api/'
 
 graph = Graph(host=app.config["DB_NAME"], password=app.config["DB_PASS"])
-queryController.init_db()
+queryController.init_db(graph)
 
 @app.route("/")
 def hello_app():
