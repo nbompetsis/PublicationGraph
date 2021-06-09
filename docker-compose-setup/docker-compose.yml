@@ -20,3 +20,14 @@ services:
       - NEO4J_dbms.security.procedures.whitelist=apoc.coll.*,apoc.load.*,apoc.*
       - NEO4J_apoc_import_file_enabled=true
     restart: always
+  
+  web:
+    container_name: flask-service
+    build: ./../RestAPI
+    links:
+      - neo4j
+    ports:
+      - "5000:5000"
+    restart: on-failure
+    depends_on:
+      - neo4j
