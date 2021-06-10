@@ -26,14 +26,6 @@ def getAttribute(attr, defaultValue = ''):
         return attr[0]
     return defaultValue
 
-
-def getConferenceName(type, attr, defaultValue = ''):
-    if type == 'article':
-        return getAttribute(attr['journal'])
-    elif type == 'incollection':
-        return getAttribute(attr['booktitle']) 
-    return defaultValue
-
 def getWord(word):
     return str(word).replace('"','\'').replace('\n', '')
 
@@ -150,7 +142,7 @@ def parse_publication(dblp_path, publication_cnt = 1000000, save_to_csv=False, i
             else:
                 authors_data.update(a for a in attrib_values['author'])
                 publications_id = getAttribute(attrib_values['ee'], getWord(attrib_values['title'][0]) + '_' + getAttribute(attrib_values['year']))
-                publications_data_line = publications_id + '|' + getWord(attrib_values['title'][0]) + '|'  + elem.tag + '|' + getAttribute(attrib_values['year']) + '|' + getAttribute(attrib_values['pages'], '0')
+                publications_data_line = publications_id + '|' + getWord(attrib_values['title'][0]) + '|' + getAttribute(attrib_values['year']) + '|' + getAttribute(attrib_values['pages'], '0')
                 publications_data.append(publications_data_line.split('|'))
                 parse_author_publication_relations(relationship_data, attrib_values, publications_id)
                 if elem.tag == 'article':
@@ -168,7 +160,7 @@ def parse_publication(dblp_path, publication_cnt = 1000000, save_to_csv=False, i
             
         clear_element(elem)
     create_file_with_header('dataset/authors.csv', ['author_name'], authors_data)
-    create_file_with_header('dataset/publications.csv', ['id', 'title', 'type', 'year', 'pages'], publications_data, notSet=True)
+    create_file_with_header('dataset/publications.csv', ['id', 'title', 'year', 'pages'], publications_data, notSet=True)
     create_file_with_header('dataset/relationship.csv', ['author_name', 'id', 'author_order'], relationship_data, notSet=True)
     create_file_with_header('dataset/journals.csv', ['name'], journal_data)
     create_file_with_header('dataset/conferences.csv', ['name'], conference_data)
