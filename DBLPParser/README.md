@@ -12,12 +12,13 @@ DBLP parser focuses on the following essential entities.
 
 ```
 
-This parser requires `dtd` file, so make sure you have both `dblp-XXX.xml` and `dblp-XXX.dtd` located under dataset directory. Note that you also should guarantee that both `xml` and `dtd` files are in the same directory, and the name of `dtd` file should same as the name given in the `<!DOCTYPE>` tag of the `xml` file.
+DBLP Parser collects and transforms data of each category in a way to be imported into csv files. The final csv files include data related to authors, publications, relationships between authors and publications (author-[PUBLISHED]->publication), journals, publication issued on journals, conferences and publication issued on conferences (publication-[ISSUED]->(journal, conference)).
 
-After processing data, parser collects the appropriate data and creates csv files including authors, publications, author-[PUBLISHED]->publication, journals, conferences and publication-[ISSUED]->(journal, conference)
+**Import step before parser execution**
+
+Parser requires `dtd` file, so make sure you have both `dblp-XXX.xml` and `dblp-XXX.dtd` located under **dataset** directory. Note that you also should guarantee that both `xml` and `dtd` files are in **dataset** directory, and the name of `dtd` file should same as the name given in the `<!DOCTYPE>` tag of the `xml` file.
 
 ## Run parser 
-
 ```
 # Create Virtual environment
 $ python3 -m pip install -r requirements.txt
@@ -35,7 +36,6 @@ $ cp ./dataset/*.csv ../docker-compose-setup/neo4j/import
 ## CSV files
 
 * Authors csv file
-
 ```
 author_name
 Martín García
@@ -47,17 +47,15 @@ Hüseyin Acan
 ```
 
 * Publications csv file
-
 ```
-id|title|type|year|pages
-https://spectreattack.com/spectre.pdf|Spectre Attacks: Exploiting Speculative Execution.|article|2018|0
-https://doi.org/10.1007/978-1-4419-5906-5_738|Ear Shape for Biometric Identification.|incollection|2011|7
-http://www.mitre.org/support/swee/rosenthal.html|The Future of Classic Data Administration: Objects + Databases + CASE|inproceedings|1998|0
+id|title|year|pages
+https://spectreattack.com/spectre.pdf|Spectre Attacks: Exploiting Speculative Execution.|2018|0
+https://doi.org/10.1007/978-1-4419-5906-5_738|Ear Shape for Biometric Identification.|2011|7
+http://www.mitre.org/support/swee/rosenthal.html|The Future of Classic Data Administration: Objects + Databases + CASE|1998|0
 ...
 ```
 
 * author-[PUBLISHED]->publication csv file
-
 ```
 author_name|id|author_order
 Paul Kocher|https://spectreattack.com/spectre.pdf|first
@@ -73,7 +71,6 @@ Yuval Yarom|https://spectreattack.com/spectre.pdf|last
 ```
 
 * Journals csv file
-
 ```
 name
 meltdownattack.com
@@ -81,16 +78,13 @@ meltdownattack.com
 ```
 
 * publication-[ISSUED]->(journal) csv file
-
 ```
 id|name
 https://spectreattack.com/spectre.pdf|meltdownattack.com
-https://meltdownattack.com/meltdown.pdf|meltdownattack.com
 ...
 ```
 
 * Conference csv file
-
 ```
 name
 SWEE
@@ -98,7 +92,6 @@ SWEE
 ```
 
 * publication-[ISSUED]->(conference) csv file
-
 ```
 id|name
 http://www.mitre.org/support/swee/rosenthal.html|SWEE
