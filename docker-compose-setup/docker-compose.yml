@@ -20,6 +20,11 @@ services:
       - NEO4J_dbms.security.procedures.whitelist=apoc.coll.*,apoc.load.*,apoc.*
       - NEO4J_apoc_import_file_enabled=true
     restart: always
+    healthcheck:
+      test: wget http://neo4j-service:7474/browser -O -
+      interval: 10s
+      timeout: 5s
+      retries: 30
   
   web:
     container_name: flask-service
@@ -30,4 +35,5 @@ services:
       - "5000:5000"
     restart: on-failure
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
