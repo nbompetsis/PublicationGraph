@@ -1,6 +1,6 @@
 # Load graph data (CSV files)
 
-Execute the following commands to create constraints and import data to Neo4j
+Execute the following commands to create constraints, indexes and import data to Neo4j instance as well.
 
 1.  Author 
 ```
@@ -18,6 +18,9 @@ MERGE (a:Author {name: row.author_name});
 ```
 # Publications constraint
 CREATE CONSTRAINT publication_title_unique ON (p:Publication) ASSERT p.id IS UNIQUE
+
+# Publication index
+CREATE INDEX publication_year_index IF NOT EXISTS FOR (p:Publication) ON (p.year)
 
 # Load Publications
 :auto USING PERIODIC COMMIT 5000
