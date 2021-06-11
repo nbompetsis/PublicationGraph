@@ -195,15 +195,14 @@ def query13(journal):
     return graph.run(query).data()
 
 def query14():
-    query = Template('''
+    query = '''
     MATCH (a1:Author)-[:PUBLISHED]->(p1:Publication)-[:ISSUED]->(c:Conference)<-[:ISSUED]-(p2:Publication)<-[:PUBLISHED]-(a2:Author)
     WHERE a1 <> a2 AND ID(a1) < ID(a2) AND NOT (a1)-[:PUBLISHED]->(:Publication)<-[:PUBLISHED]-(a2)
     WITH collect(DISTINCT {author1: a1.name, author2: a2.name}) AS PAIRS
     UNWIND PAIRS AS row
     with row.author1 AS AUTHOR_1, row.author2 AS AUTHOR_2
     return AUTHOR_1, AUTHOR_2
-    ''').substitute()
-    
+    '''
     return graph.run(query).data()
 
 def query15(k):
@@ -258,13 +257,12 @@ def query17(years):
     return graph.run(query).data()
 
 def query18():
-    query = Template('''
+    query = '''
     MATCH (a1:Author)-[:PUBLISHED]->()-[:ISSUED]->(c:Conference)
     WITH a1, c
     MATCH (a1)-[:PUBLISHED]->(p:Publication)-[:ISSUED]->(c)
     WITH a1, c, size(collect(distinct p)) AS NUM_PUB
     RETURN a1.name as AUTHOR, NUM_PUB
     ORDER BY NUM_PUB DESC
-    ''').substitute()
-    
+    '''
     return graph.run(query).data()
