@@ -52,6 +52,8 @@ The schema of Neo4j consists of the following nodes and relationships:
     1.    PUBLISHED: Author-[PUBLISHED]->Publication, Properties: order (values: first, middle and last)
     2.    ISSUED: Publication -[ISSUED]-> Conference or Journal
 
+![Screenshot 2021-06-10 at 3 54 31 AM](https://user-images.githubusercontent.com/11991105/121448088-a202af00-c99f-11eb-892e-c3c9d9a65574.png)
+
 
 ## Rest API
 A Rest API was created on top of Neo4j exposing results on various queries related to nodes and relationships of graph schema. For the needs of the project implemented 18 [cypher queries](./Neo4jQueries/README.md) which indicate the powerful features and efficiency of a graph database like Neo4j on heavy queries.
